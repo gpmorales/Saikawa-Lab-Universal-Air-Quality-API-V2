@@ -1,0 +1,105 @@
+@Author George Morales
+
+AWS Single RDS instance with Single DB instance (unified struct for faster & less expensive cross table queries)
+
+----------------------------------------------------------------------------------------------------------------------------------------------------|
+
+/API/V1/SENSORS
+
+Table Name: SENSORS (tracks unqiue sensor. Holds id, brand, metadata, and current_location, last_location)
+
+SENSORS schema:
+COLUMN NAME		           DESCRIPTION
+id                         (Unique) identifier
+sensor_id	               The unique ID of the sensor OR Serial Number
+sensor_brand	           The brand of the sensor.
+sensor_latitude            Current latitude of sensor location
+sensor_longitude           current longitude of sensor location
+last_location_update       last date location was updated
+date_uploaded              date of sensor upload
+is_active                  Boolean
+
+
+CREATE TABLE SENSORS (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sensor_id VARCHAR(255) NOT NULL,
+    sensor_brand VARCHAR(255) NOT NULL,
+    sensor_latitude DECIMAL(10, 8),
+    sensor_longitude DECIMAL(11, 8),
+    last_location_update DATETIME NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    date_uploaded DATETIME NOT NULL,
+    CONSTRAINT unique_sensor UNIQUE (sensor_brand, sensor_id)
+);
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------|
+
+
+/API/V1/SENSOR-MODELS
+
+Table Name: SENSOR_MODELS (track sensor models, which includes measurement/data schema, model type, data type, and model name since multiple sensors...
+                            will have different tables for storing raw data, corrected hourly, corrected daily, as well as use different models for 
+                            the bias correction)
+
+SENSOR_MODELS schema:
+COLUMN NAME		             DESCRIPTION
+id                           (Unique) identifier
+sensor_id	                 The unique ID of the sensor.
+sensor_brand	             The brand of the sensor.
+sensor_table_name	         (Unique) A unique name for each data/measurement table assoc with this sensor configuration
+sensor_data_schema           JSON object defining the schema for the measurement table for this specific sensor configuration.
+measurement_model            For Corrected Data, the model applied on the measurements
+measurement_type	         Specifies the type of data (RAW, CORRECTED).
+measurement_time_interval    Specifies the interval of measurements (HOURLY, DAILY, or OTHER).
+
+
+// Raw has no time interval associated (always OTHER)
+// Existing sensor tables/schemas CAN BE updated
+
+CREATE TABLE SENSOR_MODELS (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sensor_id VARCHAR(255) NOT NULL,
+    sensor_brand VARCHAR(255) NOT NULL,
+    sensor_table_name VARCHAR(255) NOT NULL,
+    sensor_data_schema JSON,
+    measurement_model VARCHAR(255) NOT NULL,
+    measurement_type VARCHAR(255) NOT NULL,
+    measurement_time_interval VARCHAR(50) NOT NULL,
+    CONSTRAINT unique_measurement_table UNIQUE (sensor_table_name),
+    CONSTRAINT fk_sensor FOREIGN KEY (sensor_brand, sensor_id) 
+        REFERENCES SENSORS(sensor_brand, sensor_id)
+);
+
+
+NOTES:
+-> measurement_table_name = sensor_brand + '_' + sensor_id + '_' + data_type + '_' + time_interval + '_' + model_name
+
+-> When new data is uploaded, a new sensor configuration is added to the Sensor Models table,
+   a corresponding 'Measurements' table is created. For instance, if the table 'airly_00858_corrected_daily' already exists
+   but data in an hourly format also needs to be uploaded from the same sensor, a new table called 'airly_00858_corrected_hourly'
+   is generated and linked with an entry in the Sensors table like this:
+   ['airly_00858_corrected_hourly', 'airly', '00858', 'corrected', 'hourly', location, SCHEMA].
+   The SCHEMA is specified by the admin user during the creation of the sensor entry and is a JSON object formatted as:
+   {
+       "column-name": "dtype"...
+   }
+
+----------------------------------------------------------------------------------------------------------------------------------------------------|
+
+/API/V1/measurements
+
+NOTES:
+
+ User can grab data via query that specifies the following:
+    - sensor_brand (id)
+    - sensor_id (int or id)
+    - data_type ('raw', 'corrected', 'both')
+    - time_interval ('hourly', daily, 'none')
+    - specific model for corrected data
+
+
+// FETCH (query -> start, end)
+// GET LAST ROW (
+
+----------------------------------------------------------------------------------------------------------------------------------------------------|

@@ -1,0 +1,9 @@
+runtime: nodejs20
+service: api2
+env: standard
+service_account: saikawa-service-account@saikawalab-427516.iam.gserviceaccount.com
+
+handlers:
+  - url: /.*
+    script: auto
+    secure: always
