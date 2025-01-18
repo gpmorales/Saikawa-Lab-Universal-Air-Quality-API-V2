@@ -97,8 +97,9 @@ async function getDateColumn(RDSdatabase, aq_table) {
 
 // Helper function to compare two sets
 function compareSets(setA, setB) {
-  return true;
+    return setA.size === setB.size && [...setA].every(x => setB.has(x));
 }
+
 
 module.exports = {
   createSensorMeasurementTable,

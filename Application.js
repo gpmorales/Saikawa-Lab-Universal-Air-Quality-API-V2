@@ -3,18 +3,16 @@ const swaggerJsDoc = require("swagger-jsdoc");
 const express = require("express");
 const app = express();
 
-const {
-  RDSInstanceConnection,
-  closeAWSConnection,
-} = require("./Database-Config/RDSInstanceConnection");
+const { RDSInstanceConnection, closeAWSConnection } = require("./Database-Config/RDSInstanceConnection");
 const SensorRouter = require("./Routes/SensorRouter.js");
 const SensorSchemaRouter = require("./Routes/SensorModelRouter.js");
 const DataRouter = require("./Routes/DataRouter.js");
 
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json({ limit: "40mb" }));
+app.use(express.json({ limit: "30mb" }));
 app.use(express.json());
+
 
 // Base URI and Router to map endpoints is initialized here
 app.use("/api/v2/sensors", SensorRouter);
@@ -33,7 +31,7 @@ const options = {
     },
     servers: [
       {
-        // url: "http://localhost:3000",
+        //url: "http://localhost:3000",
         url: "https://api2-dot-saikawalab-427516.uc.r.appspot.com",
         description: "Development Server",
       },

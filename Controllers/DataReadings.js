@@ -1,15 +1,9 @@
-const {
-  RDSInstanceConnection,
-  closeAWSConnection,
-} = require("../Database-Config/RDSInstanceConnection");
-const {
-  getDateColumn,
-  compareSets,
-} = require("../Utility/SensorSchemaUtility.js");
-const csv = require("csv-parser");
+const { RDSInstanceConnection, closeAWSConnection } = require("../Database-Config/RDSInstanceConnection");
+const { getDateColumn, compareSets } = require("../Utility/SensorSchemaUtility.js");
 const { Parser } = require("json2csv");
-const Busboy = require("busboy");
 const { pipeline } = require("stream/promises");
+const Busboy = require("busboy");
+const csv = require("csv-parser");
 
 const MEASUREMENT_TYPES = ["RAW", "CORRECTED"];
 const MEASUREMENT_TIME_INTERVALS = ["HOURLY", "DAILY", "OTHER"];
@@ -200,7 +194,6 @@ async function insertSensorDataFromCSV(request, response) {
     });
 
     let dateColumn = await getDateColumn(RDSdatabase, AQ_DATA_TABLE);
-    dateColumn = "'" + dateColumn + "'"
     
     if (!dateColumn) {
       await closeAWSConnection(RDSdatabase);
@@ -214,13 +207,10 @@ async function insertSensorDataFromCSV(request, response) {
 
     busboy.on("file", (fieldname, file, filename) => {
       console.log(`Receiving file: ${filename}`);
-
       file
         .pipe(csv())
         .on("data", (data) => {
           const incomingColumns = new Set(Object.keys(data));
-          console.log(data);
-          console.log(dateColumn);
 
           if (!compareSets(incomingColumns, schemaColumns)) {
             console.log(incomingColumns, schemaColumns);
@@ -235,11 +225,7 @@ async function insertSensorDataFromCSV(request, response) {
             const [month, day, year] = datePart.split("/");
 
             // Convert to `YYYY-MM-DD HH:mm:ss` format
-            const formattedDate = `${
-              year.length === 2 ? "20" + year : year
-            }-${month.padStart(2, "0")}-${day.padStart(2, "0")} ${
-              timePart || "00:00:00"
-            }`;
+            const formattedDate = `${year.length === 2 ? "20" + year : year}-${month.padStart(2, "0")}-${day.padStart(2, "0")} ${timePart || "00:00:00"}`;
             console.log(formattedDate);
 
             // Validate date format
