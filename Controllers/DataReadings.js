@@ -213,7 +213,6 @@ async function insertSensorDataFromCSV(request, response) {
           const incomingColumns = new Set(Object.keys(data));
 
           if (!compareSets(incomingColumns, schemaColumns)) {
-            console.log(incomingColumns, schemaColumns);
             console.error("Incoming columns do not match schema.");
             busboy.emit("error", new Error("Column validation failed."));
             return;
