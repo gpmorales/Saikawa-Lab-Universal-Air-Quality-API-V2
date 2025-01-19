@@ -220,13 +220,11 @@ async function insertSensorDataFromCSV(request, response) {
           }
 
           if (data[dateColumn]) {
-            console.log(data[dateColumn]);
             const [datePart, timePart] = data[dateColumn].split(" ");
             const [month, day, year] = datePart.split("/");
 
             // Convert to `YYYY-MM-DD HH:mm:ss` format
             const formattedDate = `${year.length === 2 ? "20" + year : year}-${month.padStart(2, "0")}-${day.padStart(2, "0")} ${timePart || "00:00:00"}`;
-            console.log(formattedDate);
 
             // Validate date format
             if (isNaN(Date.parse(formattedDate))) {
