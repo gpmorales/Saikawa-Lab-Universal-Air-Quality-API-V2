@@ -182,9 +182,7 @@ async function insertSensorDataFromCSV(request, response) {
         WHERE TABLE_NAME = ? 
       `;
 
-    const tableColumns = await RDSdatabase.raw(tableSchemaQuery, [
-      AQ_DATA_TABLE,
-    ]);
+    const tableColumns = await RDSdatabase.raw(tableSchemaQuery, [AQ_DATA_TABLE]);
 
     const schemaColumns = new Set();
     tableColumns[0].forEach((column) => {
@@ -209,8 +207,8 @@ async function insertSensorDataFromCSV(request, response) {
       console.log(`Receiving file: ${filename}`);
       file
         .pipe(csv())
-        .on("data", (data) => {
-          const incomingColumns = new Set(Object.keys(data));
+        .on("data", (row) => {
+          const incomingColumns = new Set(Object.keys(row));
 
           if (!compareSets(incomingColumns, schemaColumns)) {
             console.error("Incoming columns do not match schema.");
@@ -218,24 +216,23 @@ async function insertSensorDataFromCSV(request, response) {
             return;
           }
 
-          if (data[dateColumn]) {
-            const [datePart, timePart] = data[dateColumn].split(" ");
-            const [month, day, year] = datePart.split("/");
+          if (row[dateColumn]) {
+            const date = new Date(row[dateColumn]);
 
-            // Convert to `YYYY-MM-DD HH:mm:ss` format
-            const formattedDate = `${year.length === 2 ? "20" + year : year}-${month.padStart(2, "0")}-${day.padStart(2, "0")} ${timePart || "00:00:00"}`;
-
-            // Validate date format
-            if (isNaN(Date.parse(formattedDate))) {
-              console.error(`Invalid date format: ${data[dateColumn]}`);
-              hasError = true;
-              return;
+            const formattedDate = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
             }
 
-            data[dateColumn] = formattedDate; // Assign back to the row
+            row[dateColumn] = formattedDate(date); 
           }
 
-          sensorData.push(data);
+          sensorData.push(row);
         })
         .on("end", () => console.log("File parsing complete."))
         .on("error", (err) => {
