@@ -53,12 +53,9 @@ async function exportSensorDataToCSV(request, response) {
     }
 
     try {
-        // Define the table name
-        const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
-
         RDSdatabase = await RDSInstanceConnection();
 
-        // Ensure table exists
+        const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
         const tableExists = await RDSdatabase.schema.hasTable(AQ_DATA_TABLE);
 
         if (!tableExists) {
@@ -81,8 +78,8 @@ async function exportSensorDataToCSV(request, response) {
         // Fetch all data from the constructed sensor table
         const sensor_data = await RDSdatabase(AQ_DATA_TABLE)
             .select("*")
-            .where(dateColumn, ">=", start_date) // Using the dateColumn variable
-            .andWhere(dateColumn, "<=", end_date); // Using the dateColumn variable
+            .where(dateColumn, ">=", start_date)
+            .andWhere(dateColumn, "<=", end_date);
 
         await closeAWSConnection(RDSdatabase);
 
@@ -92,7 +89,7 @@ async function exportSensorDataToCSV(request, response) {
                 .json({ error: "No data found for the specified sensor." });
         }
 
-        // Convert JSON data array to CSV format using json2csv
+        // Convert JSON data array to CSV 
         const json2csvParser = new Parser();
         const csv = json2csvParser.parse(sensor_data);
 
@@ -102,11 +99,10 @@ async function exportSensorDataToCSV(request, response) {
 
     } catch (err) {
         console.error("Error downloading sensor data: ", err);
-        // Ensure the connection is closed in case of an error
         if (RDSdatabase) {
             await closeAWSConnection(RDSdatabase);
         }
-        response.status(500).json({
+        return response.status(500).json({
             error: `Error processing your request: ${err.sqlMessage || err.message}`
         });
     }
@@ -144,11 +140,11 @@ async function insertSensorDataFromCSV(request, response) {
     }
 
     try {
-        const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
-
         RDSdatabase = await RDSInstanceConnection();
 
+        const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
         const tableExists = await RDSdatabase.schema.hasTable(AQ_DATA_TABLE);
+
         if (!tableExists) {
             await closeAWSConnection(RDSdatabase);
             return response.status(400).json({
@@ -163,8 +159,8 @@ async function insertSensorDataFromCSV(request, response) {
         `;
 
         const tableColumns = await RDSdatabase.raw(tableSchemaQuery, [AQ_DATA_TABLE]);
-
         const schemaColumns = new Set();
+
         tableColumns[0].forEach((column) => {
             if (column["COLUMN_NAME"] !== "id") {
                 schemaColumns.add(column["COLUMN_NAME"]);
@@ -180,6 +176,7 @@ async function insertSensorDataFromCSV(request, response) {
             });
         }
 
+        // Array of dicts to be inserted into DB Table
         const sensorData = [];
         const busboy = new Busboy({ headers: request.headers });
 
@@ -236,13 +233,13 @@ async function insertSensorDataFromCSV(request, response) {
         });
 
         await pipeline(request, busboy);
+
     } catch (err) {
         console.error("Error processing sensor data:", err);
-        response.status(500).json({ error: "Error processing your request." });
-    } finally {
         if (RDSdatabase) {
             await closeAWSConnection(RDSdatabase);
         }
+        return response.status(500).json({ error: "Error processing your request." });
     }
 }
 
@@ -288,12 +285,9 @@ async function fetchSensorDataReadings(request, response) {
     }
 
     try {
-        // Define the table name
-        const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
-
         RDSdatabase = await RDSInstanceConnection();
 
-        // Ensure table exists
+        const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
         const tableExists = await RDSdatabase.schema.hasTable(AQ_DATA_TABLE);
 
         if (!tableExists) {
@@ -303,7 +297,6 @@ async function fetchSensorDataReadings(request, response) {
             });
         }
 
-        // Get the date column
         const dateColumn = await getDateColumn(RDSdatabase, AQ_DATA_TABLE);
 
         if (!dateColumn) {
@@ -332,7 +325,6 @@ async function fetchSensorDataReadings(request, response) {
 
     } catch (err) {
         console.error("Error fetching sensor data: ", err);
-        // Ensure the connection is closed in case of an error
         if (RDSdatabase) {
             await closeAWSConnection(RDSdatabase);
         }
@@ -376,12 +368,9 @@ async function insertSensorDataReadings(request, response) {
     }
 
     try {
-        // Define the table name
-        const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
-
         RDSdatabase = await RDSInstanceConnection();
 
-        // Ensure table exists
+        const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
         const tableExists = await RDSdatabase.schema.hasTable(AQ_DATA_TABLE);
 
         if (!tableExists) {
@@ -424,7 +413,7 @@ async function insertSensorDataReadings(request, response) {
             });
         }
 
-        // Ensure entire Date column has proper formatting
+        // Ensure entire Date column from payload has proper formatting
         for (let i = 0; i < requestPayload.length; i++) {
             const row = requestPayload[i];
             if (row[dateColumn]) {
@@ -447,13 +436,10 @@ async function insertSensorDataReadings(request, response) {
         }
     } catch (err) {
         console.error("Error processing sensor data: ", err);
-        // Ensure the connection is closed
         if (RDSdatabase) {
             await closeAWSConnection(RDSdatabase);
         }
-        return response
-            .status(500)
-            .json({ error: "Error processing your request." });
+        return response.status(500).json({ error: "Error processing your request." });
     }
 }
 
@@ -490,12 +476,9 @@ async function getLastDataReading(request, response) {
     }
 
     try {
-        // Define the table name
-        const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "NIL-MODEL"}_${measurement_type}_${measurement_time_interval}`;
-
         RDSdatabase = await RDSInstanceConnection();
 
-        // Ensure table exists
+        const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "NIL-MODEL"}_${measurement_type}_${measurement_time_interval}`;
         const tableExists = await RDSdatabase.schema.hasTable(AQ_DATA_TABLE);
 
         if (!tableExists) {
@@ -528,22 +511,22 @@ async function getLastDataReading(request, response) {
         }
 
         await closeAWSConnection(RDSdatabase);
-        response.status(200).json(last_row);
+        return response.status(200).json(last_row);
 
     } catch (err) {
         console.error("Error fetching last row of sensor data readings: ", err);
         if (RDSdatabase) {
             await closeAWSConnection(RDSdatabase);
         }
-        response.status(500).json({ error: "Error processing your request." });
+        return response.status(500).json({ error: "Error processing your request." });
     }
 }
 
 
 module.exports = {
-  exportSensorDataToCSV,
-  insertSensorDataFromCSV,
-  fetchSensorDataReadings,
-  insertSensorDataReadings,
-  getLastDataReading,
+    exportSensorDataToCSV,
+    insertSensorDataFromCSV,
+    fetchSensorDataReadings,
+    insertSensorDataReadings,
+    getLastDataReading,
 };

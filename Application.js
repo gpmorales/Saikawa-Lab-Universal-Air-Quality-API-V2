@@ -24,14 +24,14 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Saikawa Labs Air Quality Storage API",
+      title: "Saikawa Labs Air Quality Sensor & Data Management API",
       version: "1.0.0",
       description:
-        "An Express-based REST API that fetches and pushes air quality data to a AWS RDS MySQL instance",
+        "An Express-based REST API that fetches and pushes air quality data to an AWS RDS MySQL instance",
     },
     servers: [
       {
-        //url: "http://localhost:3000",
+        //url: "http://localhost:3000", // For local instance
         url: "https://api2-dot-saikawalab-427516.uc.r.appspot.com",
         description: "Development Server",
       },
@@ -61,79 +61,85 @@ const options = {
   ],
 };
 
+
+// Serve Swagger GUI
 const swaggerSpec = swaggerJsDoc(options);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Application Entry Point
+
+// APPLICATION ENTRY POINT
 async function StartServer() {
-  try {
-    await initializeDatabase();
+    try {
+        await initializeDatabase();
 
-    app.listen(PORT, () => {
-      console.log("\nListening to Port " + PORT + " ...\n");
-    });
-  } catch (err) {
-    console.error("Error starting server:", err);
-  }
+        app.listen(PORT, () => {
+            console.log("\nListening to Port " + PORT + " ...\n");
+        });
+
+    } catch (err) {
+        console.error("Error starting server:", err);
+    }
 }
 
-// Initialize our Tables
+
+// Initialize Sensor and Sensor Schema Tables if necessary
 async function initializeDatabase() {
-  const db = await RDSInstanceConnection();
+    const db = await RDSInstanceConnection();
 
-  // Create the SENSORS table
-  const sensorsTableExists = await db.schema.hasTable("SENSORS");
+    // Create the SENSORS table
+    const sensorsTableExists = await db.schema.hasTable("SENSORS");
 
-  if (!sensorsTableExists) {
-    await db.schema
-      .createTable("SENSORS", (table) => {
-        table.increments("id").primary(); // auto-increment primary key
-        table.string("sensor_id", 255).notNullable();
-        table.string("sensor_brand", 255).notNullable();
-        table.decimal("sensor_latitude", 10, 8);
-        table.decimal("sensor_longitude", 11, 8);
-        table.dateTime("last_location_update").notNullable();
-        table.boolean("is_active").defaultTo(true);
-        table.dateTime("date_uploaded").notNullable();
-        table.unique(["sensor_brand", "sensor_id"]); // unique constraint on sensor_brand and sensor_id
-      })
-      .then(() => {
-        console.log("SENSORS table created");
-      })
-      .catch((err) => {
-        console.error("Error creating SENSORS table:", err);
-      });
-  }
+    if (!sensorsTableExists) {
+        await db.schema
+        .createTable("SENSORS", (table) => {
+            table.increments("id").primary();                       /* auto-increment primary key */
+            table.string("sensor_id", 255).notNullable();
+            table.string("sensor_brand", 255).notNullable();
+            table.decimal("sensor_latitude", 10, 8);
+            table.decimal("sensor_longitude", 11, 8);
+            table.dateTime("last_location_update").notNullable();
+            table.boolean("is_active").defaultTo(true);
+            table.dateTime("date_uploaded").notNullable();
+            table.unique(["sensor_brand", "sensor_id"]);            /* unique constraint on sensor_brand and sensor_id */
+        })
+        .then(() => {
+            console.log("SENSORS table created");
+        })
+        .catch((err) => {
+            console.error("Error creating SENSORS table:", err);
+        });
+    }
 
-  // Create the SENSOR_MODELS table
-  const sensorModelsTableExists = await db.schema.hasTable("SENSOR_MODELS");
+    // Create the SENSOR_MODELS table
+    const sensorModelsTableExists = await db.schema.hasTable("SENSOR_MODELS");
 
-  if (!sensorModelsTableExists) {
-    db.schema
-      .createTable("SENSOR_MODELS", (table) => {
-        table.increments("id").primary(); // auto-increment primary key
-        table.string("sensor_id", 255).notNullable();
-        table.string("sensor_brand", 255).notNullable();
-        table.string("sensor_table_name", 255).notNullable();
-        table.json("sensor_data_schema");
-        table.string("measurement_model", 255).notNullable();
-        table.string("measurement_type", 255).notNullable();
-        table.string("measurement_time_interval", 50).notNullable();
-        table.unique("sensor_table_name"); // unique constraint on sensor_table_name
-        table
-          .foreign(["sensor_brand", "sensor_id"])
-          .references(["sensor_brand", "sensor_id"])
-          .inTable("SENSORS"); // foreign key constraint
-      })
-      .then(() => {
-        console.log("SENSOR_MODELS table created");
-      })
-      .catch((err) => {
-        console.error("Error creating SENSOR_MODELS table:", err);
-      });
-  }
+    if (!sensorModelsTableExists) {
+        db.schema
+            .createTable("SENSOR_MODELS", (table) => {
+                table.increments("id").primary();                       /* auto-increment primary key */
+                table.string("sensor_id", 255).notNullable();
+                table.string("sensor_brand", 255).notNullable();
+                table.string("sensor_table_name", 255).notNullable();
+                table.json("sensor_data_schema");
+                table.string("measurement_model", 255).notNullable();
+                table.string("measurement_type", 255).notNullable();
+                table.string("measurement_time_interval", 50).notNullable();
+                table.unique("sensor_table_name");                      /* unique constraint on sensor_brand and sensor_id */
+                table
+                    .foreign(["sensor_brand", "sensor_id"])
+                    .references(["sensor_brand", "sensor_id"])
+                    .inTable("SENSORS");                                  /* foreign key constraint */
+            })
+            .then(() => {
+                console.log("SENSOR_MODELS table created");
+            })
+            .catch((err) => {
+                console.error("Error creating SENSOR_MODELS table:", err);
+            });
+    }
 
-  await closeAWSConnection(db);
+    await closeAWSConnection(db);
 }
+
 
 StartServer();

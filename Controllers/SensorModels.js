@@ -27,34 +27,24 @@ async function getAllSensorModels(request, response) {
 
     try {
         RDSdatabase = await RDSInstanceConnection();
-
         const all_sensor_models = await RDSdatabase(SENSOR_MODELS_TABLE).select("*")
-
         await closeAWSConnection(RDSdatabase);
 
-        response.status(200).json({
+        return response.status(200).json({
             data: all_sensor_models,
             message: all_sensor_models.length ? "Successfully returned all Sensor Models." : "No Sensor Models have been registered at this moment."
         });
-
     } catch (err) {
         console.error('Error fetching sensor models:', err);
-
         if (RDSdatabase) {
-            try {
-                await closeAWSConnection(RDSdatabase);
-            } catch (closeErr) {
-                console.error('Error closing database connection:', closeErr);
-            }
+            await closeAWSConnection(RDSdatabase);
         }
-
-        response.status(500).json({ error: `An error occurred while fetching Sensor Models: ${err.sqlMessage || err.message}` });
+        return response.status(500).json({ error: `An error occurred while fetching Sensor Models: ${err.sqlMessage || err.message}` });
     }
 }
 
 
-// Add a sensor model (via swagger or programmatically) assuming sensor is present in Sensor Table
-// NOTE: In order to upload data, the model's table must already exist
+// Add a sensor model (via swagger or programmatically) assuming the sensor is already present in Sensor Table
 async function addSensorModel(request, response) {
     let RDSdatabase;
     let sncr_brand;
@@ -109,26 +99,21 @@ async function addSensorModel(request, response) {
         } 
 
         if (insertedId) {
-            response.status(201).json({
+            return response.status(201).json({
                 message: `Sensor Model successfully added with row ID ${insertedId} and corresponding Measurement table '${sensor_table_name}' has been created. You can now upload data.`
             });
         }
 
     } catch (err) {
         console.error('Error adding Sensor Model:', err);
-
         if (RDSdatabase) {
-            try {
-                await closeAWSConnection(RDSdatabase);
-            } catch (closeErr) {
-                console.error('Error closing database connection:', closeErr);
-            }
+            await closeAWSConnection(RDSdatabase);
         }
 
         if (err.code === "ER_NO_REFERENCED_ROW_2") {
-            response.status(500).json({ error: `The Sensor associated with this model has NOT been registered yet. Register a sensor of brand '${sncr_brand}' and serial number '${sncr_id}' first using the POST '/api/v2/sensors/{sensor_brand}/{sensor_id}' endpoint`});
+            return response.status(500).json({ error: `The Sensor associated with this model has NOT been registered yet. Register a sensor of brand '${sncr_brand}' and serial number '${sncr_id}' first using the POST '/api/v2/sensors/{sensor_brand}/{sensor_id}' endpoint`});
         } else {
-            response.status(500).json({ error: `An error occurred while adding the sensor: ${err.sqlMessage || err.message}` });
+            return response.status(500).json({ error: `An error occurred while adding the sensor: ${err.sqlMessage || err.message}` });
         }
     }
 }
@@ -153,20 +138,20 @@ async function getSensorModelDataSchema(request, response) {
 
     if (!MEASUREMENT_TYPES.includes(measurement_type)) {
         return response.status(400).json({
-            error: `Invalid measurement type. Allowed values are: ${MEASUREMENT_TYPES.join(", ")}.`,
+            error: `Invalid measurement type. Allowed values are: ${MEASUREMENT_TYPES.join(", ")}.`
         });
     }
 
     if (!MEASUREMENT_TIME_INTERVALS.includes(measurement_time_interval)) {
         return response.status(400).json({
-            error: `Invalid time interval. Allowed values are: ${MEASUREMENT_TIME_INTERVALS.join(", ")}.`,
+            error: `Invalid time interval. Allowed values are: ${MEASUREMENT_TIME_INTERVALS.join(", ")}.`
         });
     }
 
     try {
         // Define the table name
         const sensor_table_name = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
-        
+
         RDSdatabase = await RDSInstanceConnection();
 
         const columns = await RDSdatabase
@@ -186,20 +171,14 @@ async function getSensorModelDataSchema(request, response) {
             return response.status(500).json({ error: `The Sensor associated with this model has NOT been registered yet. Register a sensor of brand '${sensor_brand}' and serial number '${sensor_id}' first using the POST '/api/v2/sensors{sensor_brand}/{sensor_id}' endpoint`});
         }
 
-        response.status(200).json(tableSchema);
+        return response.status(200).json(tableSchema);
 
     } catch (err) {
         console.error('Error fetching Sensor Model`s Schema:', err);
-
         if (RDSdatabase) {
-            try {
-                await closeAWSConnection(RDSdatabase);
-            } catch (closeErr) {
-                console.error('Error closing database connection:', closeErr);
-            }
+            await closeAWSConnection(RDSdatabase);
         }
-
-        response.status(500).json({ error: `An error occurred while fetching this Model's schema: ${err.sqlMessage || err.message}` });
+        return response.status(500).json({ error: `An error occurred while fetching this Model's schema: ${err.sqlMessage || err.message}` });
     }
 }
 
@@ -233,16 +212,10 @@ async function getSensorModels(request, response) {
 
     } catch (err) {
         console.error('Error fetching sensors:', err);
-
         if (RDSdatabase) {
-            try {
-                await closeAWSConnection(RDSdatabase);
-            } catch (closeErr) {
-                console.error('Error closing database connection:', closeErr);
-            }
+            await closeAWSConnection(RDSdatabase);
         }
-
-        response.status(500).json({ error: `Error processing your request. ${err.sqlMessage}` });
+        return response.status(500).json({ error: `Error processing your request. ${err.sqlMessage}` });
     }
 }
 
@@ -266,13 +239,13 @@ async function downloadSensorModelReadings(request, response) {
 
         if (!MEASUREMENT_TYPES.includes(measurement_type)) {
             return response.status(400).json({
-                error: `Invalid measurement type. Allowed values are: ${MEASUREMENT_TYPES.join(", ")}.`,
+                error: `Invalid measurement type. Allowed values are: ${MEASUREMENT_TYPES.join(", ")}.`
             });
         }
 
         if (!MEASUREMENT_TIME_INTERVALS.includes(measurement_time_interval)) {
             return response.status(400).json({
-                error: `Invalid time interval. Allowed values are: ${MEASUREMENT_TIME_INTERVALS.join(", ")}.`,
+                error: `Invalid time interval. Allowed values are: ${MEASUREMENT_TIME_INTERVALS.join(", ")}.`
             });
         }
 
@@ -297,16 +270,13 @@ async function downloadSensorModelReadings(request, response) {
 
         response.header('Content-Type', 'text/csv');
         response.header('Content-Disposition', `attachment; filename=${sensor_table}.csv`);
-
         response.send(csv);
 
     } catch (err) {
-
-        // Ensure the connection is closed in case of an error
         if (RDSdatabase) {
             await closeAWSConnection(RDSdatabase);
         }
-        response.status(500).json({ error: `Error processing your request: ${err.sqlMessage}` });
+        return response.status(500).json({ error: `Error processing your request: ${err.sqlMessage}` });
     }
 }
 
