@@ -103,3 +103,8 @@ NOTES:
 // GET LAST ROW (
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------|
+
+ASSUMPTIONS:
+- Data is always ordered by date (no sorting should be necessary at any point when returning or ingesting data)
+- Each table/sensor model schema can only have ONE TIME/DATE column
+

@@ -28,7 +28,7 @@ async function exportSensorDataToCSV(request, response) {
     // Format start_date and end_date in this format YYYY-MM-DD HH:MM:SS
     try {
         start_date = formatDateTime(start_date);
-        end_date = formatDateTime(start_date);
+        end_date = formatDateTime(end_date);
     } catch (err) {
         return response.status(400).json({ error: "Could not parse input dates: " + err });
     }
@@ -243,6 +243,7 @@ async function insertSensorDataFromCSV(request, response) {
     }
 }
 
+
 // GET data via date queries (as JSON)
 async function fetchSensorDataReadings(request, response) {
     let RDSdatabase;
@@ -256,12 +257,12 @@ async function fetchSensorDataReadings(request, response) {
         measurement_time_interval,
     } = request.params;
 
-    let { start_date, end_date } = request.query;
+    let { start_date, end_date, averaged_rows } = request.query;
 
     // Format start_date and end_date in this format YYYY-MM-DD HH:MM:SS
     try {
         start_date = formatDateTime(start_date);
-        end_date = formatDateTime(start_date);
+        end_date = formatDateTime(end_date);
     } catch (err) {
         return response.status(400).json({ error: "Could not parse input dates: " + err });
     }
@@ -307,21 +308,86 @@ async function fetchSensorDataReadings(request, response) {
         }
 
         // Fetch all data from the constructed sensor table
-        const all_data = await RDSdatabase(AQ_DATA_TABLE)
+        const allData = await RDSdatabase(AQ_DATA_TABLE)
             .select("*")
-            .where(dateColumn, ">", start_date) 
-            .andWhere(dateColumn, "<", end_date);
+            .where(dateColumn, ">=", start_date) 
+            .andWhere(dateColumn, "<=", end_date);
 
-        await closeAWSConnection(RDSdatabase);
-
-        if (!all_data || all_data.length === 0) {
+        // Ensure data returned is valid
+        if (!allData || allData.length === 0) {
             return response
                 .status(400)
                 .json({ error: "No data found for the specified sensor." });
         }
 
+        // Holds the averagedData
+        const averagedData = [];
+
+        // Check if an averaged row count was given
+        if (averaged_rows) {
+            // Ensure average row  count is valid
+            if (averaged_rows > allData.length) {
+                averaged_rows = allData.length;
+            }
+
+            const rowsPerAveragedRow = Math.floor(allData.length / averaged_rows);
+            const extraRows = allData.length % averaged_rows;
+
+            let currentIndex = 0;
+
+            // We will recalculate how many rows to average to guarantee exact count
+            for (let i = 0; i < averaged_rows; i++) {
+
+                // will change as we 
+                const rowsToAverage = rowsPerAveragedRow + (i < extraRows ? 1 : 0)
+                console.log(rowsToAverage);
+
+                if (currentIndex >= allData.length) break;
+
+                // Determine the start index of the next window
+                const startIndex = currentIndex;
+
+                // End index of window is just the size of the window 
+                const endIndex = Math.min(startIndex + rowsToAverage, allData.length);
+
+                // Average the data 
+                let averagedPoint = {}
+                let totalTime = 0;
+                for (let j = startIndex; j < endIndex; j++) {
+                    // Update the averaged point
+                    const dataPoint = allData[j];
+                    for (let key in dataPoint) {
+                        if (key !== dateColumn && key !== "id") {
+                            averagedPoint[key] = (averagedPoint[key] || 0) + dataPoint[key];
+                        } else if (key === dateColumn) {
+                            totalTime += new Date(dataPoint[key]).getTime();
+                        }
+                    }
+                }
+
+                // Average the data in averagedPoint
+                for (let key in averagedPoint) {
+                    averagedPoint[key] = averagedPoint[key] / rowsToAverage;
+                }
+
+                averagedPoint[dateColumn] = new Date(totalTime / rowsToAverage);
+
+                // Add the averaged data point
+                averagedData.push(averagedPoint);
+
+                // Updated the next window's starting index
+                currentIndex = endIndex;
+            }
+        } 
+
+        await closeAWSConnection(RDSdatabase);
+
         // Return JSON data array
-        return response.status(200).json(all_data);
+        if (averaged_rows) {
+            return response.status(200).json(averagedData);
+        } else {
+            return response.status(200).json(allData);
+        }
 
     } catch (err) {
         console.error("Error fetching sensor data: ", err);

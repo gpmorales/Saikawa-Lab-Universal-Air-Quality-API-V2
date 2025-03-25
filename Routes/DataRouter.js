@@ -152,6 +152,12 @@ DataRouter.get("/csv/:sensor_brand/:sensor_id/:measurement_model/:measurement_ty
  *           type: string
  *           format: date
  *         description: End date for fetching data.
+ *       - name: averaged_rows 
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: returns data from date query averaged to N rows.
  *     responses:
  *       200:
  *         description: JSON array containing sensor readings.
@@ -352,8 +358,7 @@ DataRouter.post("/json/:sensor_brand/:sensor_id/:measurement_model/:measurement_
  *                   type: string
  *                   description: Detailed error message regarding the server issue.
  */
-DataRouter.post("/csv/:sensor_brand/:sensor_id/:measurement_model/:measurement_type/:measurement_time_interval",
-    insertSensorDataFromCSV);
+DataRouter.post("/csv/:sensor_brand/:sensor_id/:measurement_model/:measurement_type/:measurement_time_interval", insertSensorDataFromCSV);
 
 
 /**

@@ -31,8 +31,8 @@ const options = {
     },
     servers: [
       {
-        //url: "http://localhost:3000", // For local instance
-        url: "https://api2-dot-saikawalab-427516.uc.r.appspot.com",
+        url: "http://localhost:3000", // For local instance
+        //url: "https://api2-dot-saikawalab-427516.uc.r.appspot.com",
         description: "Development Server",
       },
     ],
@@ -70,7 +70,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // APPLICATION ENTRY POINT
 async function StartServer() {
     try {
-        await initializeDatabase();
+        //await initializeDatabase();
 
         app.listen(PORT, () => {
             console.log("\nListening to Port " + PORT + " ...\n");
