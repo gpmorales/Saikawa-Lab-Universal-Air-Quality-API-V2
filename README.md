@@ -3,9 +3,11 @@
 
 > **Deployment:** AWS RDS (Single instance) with a unified MySQL database.  
 > **Design Rationale:** Centralizing all sensor data within one database ensures faster and cheaper cross-table queries and eases schema validation, data auditing, and analytics aggregation.
-> **SWAGGER API LINK:** https://api2-dot-saikawalab-427516.uc.r.appspot.com/api-docs/#
 
 ---
+
+**SWAGGER API LINK:** https://api2-dot-saikawalab-427516.uc.r.appspot.com/api-docs/#
+
 
 ## `/API/V2/SENSORS`
 
