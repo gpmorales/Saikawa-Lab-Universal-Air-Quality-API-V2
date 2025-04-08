@@ -1,4 +1,4 @@
-# Saikawa Labs Air Quality Sensor & Data Management API V2
+# Saikawa Labs Air Quality Data Management API V2
 **Author:** George Morales
 
 > **Deployment:** AWS RDS (Single instance) with a unified MySQL database.  
