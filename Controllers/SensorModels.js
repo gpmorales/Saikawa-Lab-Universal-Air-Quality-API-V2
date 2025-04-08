@@ -1,5 +1,5 @@
 const { createSensorMeasurementTable, createPayload } = require("../Utility/SensorSchemaUtility.js")
-const { RDSInstanceConnection, closeAWSConnection } = require("../Database-Config/RDSInstanceConnection");
+const { RDSInstanceConnection, closeAWSConnection } = require("../Database/RDSInstanceConnection");
 const { Parser } = require("json2csv");
 const Joi = require("joi");
 

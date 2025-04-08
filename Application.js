@@ -1,17 +1,17 @@
+const { RDSInstanceConnection, closeAWSConnection } = require("./Database/RDSInstanceConnection");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 const express = require("express");
 const app = express();
 
-const { RDSInstanceConnection, closeAWSConnection } = require("./Database-Config/RDSInstanceConnection");
 const SensorRouter = require("./Routes/SensorRouter.js");
 const SensorSchemaRouter = require("./Routes/SensorModelRouter.js");
 const DataRouter = require("./Routes/DataRouter.js");
 
-const PORT = process.env.PORT || 3000;
-
 app.use(express.json({ limit: "30mb" }));
 app.use(express.json());
+
+const PORT = process.env.PORT || 3000;
 
 
 // Base URI and Router to map endpoints is initialized here
@@ -62,12 +62,12 @@ const options = {
 };
 
 
-// Serve Swagger GUI
+// Serve Swagger page
 const swaggerSpec = swaggerJsDoc(options);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
-// APPLICATION ENTRY POINT
+// Application entry point
 async function StartServer() {
     try {
         //await initializeDatabase();

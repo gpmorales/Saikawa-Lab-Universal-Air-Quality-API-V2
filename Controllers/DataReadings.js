@@ -1,4 +1,4 @@
-const { RDSInstanceConnection, closeAWSConnection } = require("../Database-Config/RDSInstanceConnection");
+const { RDSInstanceConnection, closeAWSConnection } = require("../Database/RDSInstanceConnection");
 const { getDateColumn, formatDateTime, compareSets } = require("../Utility/SensorSchemaUtility.js");
 const { Parser } = require("json2csv");
 const { pipeline } = require("stream/promises");

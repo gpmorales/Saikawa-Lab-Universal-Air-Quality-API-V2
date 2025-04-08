@@ -1,4 +1,4 @@
-const { RDSInstanceConnection, closeAWSConnection } = require("../Database-Config/RDSInstanceConnection");
+const { RDSInstanceConnection, closeAWSConnection } = require("../Database/RDSInstanceConnection");
 const Joi = require("joi");
 
 
