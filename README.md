@@ -19,18 +19,18 @@ and provides necessary metadata (such as location and status) used in data analy
 
 ### Table Schema
 
-+------------------------+--------------------------------------------------------------+
-| Column Name            | Description                                                  |
-+------------------------+--------------------------------------------------------------+
-| `id`                   | Auto-incremented unique primary key                          |
-| `sensor_id`            | Unique serial number of the sensor                           |
-| `sensor_brand`         | Manufacturer or vendor name                                  |
-| `sensor_latitude`      | Current latitude of the deployed sensor                      |
-| `sensor_longitude`     | Current longitude of the deployed sensor                     |
-| `last_location_update` | Last date the sensor location was updated                    |
-| `date_uploaded`        | Date the sensor was registered in the system                 |
-| `is_active`            | Boolean flag indicating if the sensor is active              |
-+------------------------+--------------------------------------------------------------+
+    +------------------------+--------------------------------------------------------------+
+    | Column Name            | Description                                                  |
+    +------------------------+--------------------------------------------------------------+
+    | `id`                   | Auto-incremented unique primary key                          |
+    | `sensor_id`            | Unique serial number of the sensor                           |
+    | `sensor_brand`         | Manufacturer or vendor name                                  |
+    | `sensor_latitude`      | Current latitude of the deployed sensor                      |
+    | `sensor_longitude`     | Current longitude of the deployed sensor                     |
+    | `last_location_update` | Last date the sensor location was updated                    |
+    | `date_uploaded`        | Date the sensor was registered in the system                 |
+    | `is_active`            | Boolean flag indicating if the sensor is active              |
+    +------------------------+--------------------------------------------------------------+
 
 ### SQL Definition
 
@@ -68,18 +68,18 @@ It is **required** for:
 
 ### Table Schema
 
-+-----------------------------+----------------------------------------------------------------------------+
-| Column Name                 | Description                                                                |
-+-----------------------------+----------------------------------------------------------------------------+
-| `id`                        | Auto-incremented unique primary key                                        |
-| `sensor_id`                 | Foreign key linking to the physical sensor (from `SENSORS`)                |
-| `sensor_brand`              | Brand of the sensor (linked to `SENSORS`)                                  |
-| `sensor_table_name`         | Globally unique name of the associated measurement table                   |
-| `sensor_data_schema`        | JSON object defining column names and datatypes for the measurement table  |
-| `measurement_model`         | Name of the bias correction model used for processing (or `RAW_MODEL`)     |
-| `measurement_type`          | One of `RAW`, `CORRECTED`                                                  |
-| `measurement_time_interval` | Time granularity: `HOURLY`, `DAILY`, or `OTHER`                            |
-+---------------------------+------------------------------------------------------------------------------+
+    +-----------------------------+----------------------------------------------------------------------------+
+    | Column Name                 | Description                                                                |
+    +-----------------------------+----------------------------------------------------------------------------+
+    | `id`                        | Auto-incremented unique primary key                                        |
+    | `sensor_id`                 | Foreign key linking to the physical sensor (from `SENSORS`)                |
+    | `sensor_brand`              | Brand of the sensor (linked to `SENSORS`)                                  |
+    | `sensor_table_name`         | Globally unique name of the associated measurement table                   |
+    | `sensor_data_schema`        | JSON object defining column names and datatypes for the measurement table  |
+    | `measurement_model`         | Name of the bias correction model used for processing (or `RAW_MODEL`)     |
+    | `measurement_type`          | One of `RAW`, `CORRECTED`                                                  |
+    | `measurement_time_interval` | Time granularity: `HOURLY`, `DAILY`, or `OTHER`                            |
+    +---------------------------+------------------------------------------------------------------------------+
 
 ### Why It's Required  
 For every table of measurements, a corresponding `SENSOR_MODELS` entry is required because:
@@ -124,32 +124,32 @@ All endpoints rely on a naming convention and use a combination of sensor identi
 
 ## Parameters (All Endpoints in /readings)
 
-+----------------------------+-----------+--------------------------------------------------------------+
-| Parameter                  | Required  | Description                                                  |
-+----------------------------+-----------+--------------------------------------------------------------+
-| `sensor_brand`             |   Yes     | Sensor vendor name (e.g., `quantaq`, `airly`)                |
-| `sensor_id`                |   Yes     | Serial number of the device                                  |
-| `measurement_model`        |   Yes     | Model name or `RAW_MODEL`                                    |
-| `measurement_type`         |   Yes     | One of `RAW` or `CORRECTED`                                  |
-| `measurement_time_interval`|   Yes     | One of `HOURLY`, `DAILY`, or `OTHER`                         |
-| `averaged_rows`            |   No      | Downsamples data using row-wise averaging (default: none)    |
-+----------------------------+-----------+--------------------------------------------------------------+
+    +----------------------------+-----------+--------------------------------------------------------------+
+    | Parameter                  | Required  | Description                                                  |
+    +----------------------------+-----------+--------------------------------------------------------------+
+    | `sensor_brand`             |   Yes     | Sensor vendor name (e.g., `quantaq`, `airly`)                |
+    | `sensor_id`                |   Yes     | Serial number of the device                                  |
+    | `measurement_model`        |   Yes     | Model name or `RAW_MODEL`                                    |
+    | `measurement_type`         |   Yes     | One of `RAW` or `CORRECTED`                                  |
+    | `measurement_time_interval`|   Yes     | One of `HOURLY`, `DAILY`, or `OTHER`                         |
+    | `averaged_rows`            |   No      | Downsamples data using row-wise averaging (default: none)    |
+    +----------------------------+-----------+--------------------------------------------------------------+
 
  **Row-averaging uses equal windowing strategy with partial handling of leftovers
 
 ## Example Measurement Tables:
 
-[ 'Airly_00459_GEORGES-MODEL_CORRECTED_HOURLY' ]
+[ 'Airly_00459_NOAHS-MODEL_CORRECTED_HOURLY' ]
 
     Represents:
     - Brand: `Airly`
     - ID: `00459`
-    - Model: `GEORGES-MODEL`
+    - Model: `NOAHS-MODEL`
     - Type: `CORRECTED`
     - Interval: `HOURLY`
 
 This table holds corrected, hourly bias-corrected data derived
-from an Airly sensor with id 00459 using GEORGES-MODEL as the coorection model!
+from an Airly sensor with id 00459 using NOAHS-MODEL as the bias correction model!
 
 
 [ 'QUANTAQ_00858_RAW_MODEL_RAW_OTHER' ]
