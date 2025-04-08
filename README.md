@@ -6,7 +6,7 @@
 
 ---
 
-**SWAGGER API LINK:** https://api2-dot-saikawalab-427516.uc.r.appspot.com/api-docs/#
+**SWAGGER API ENDPOINTS LINK:** https://api2-dot-saikawalab-427516.uc.r.appspot.com/api-docs/#
 
 
 ## `/API/V2/SENSORS`
