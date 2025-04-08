@@ -8,14 +8,14 @@
 
 ## `/API/V2/SENSORS`
 
-    ### Table Name: `SENSORS`  
-    Tracks individual physical sensors, their unique identity, deployment location, and status.
+### Table Name: `SENSORS`  
+Tracks individual physical sensors, their unique identity, deployment location, and status.
 
-    ### Description:
-    The SENSORS table serves as the base registry for all physical air quality monitoring devices
-    deployed by Saikawa Labs. Each row in this table corresponds to a unique sensor identified by
-    its brand and serial number. This table is critical as it enforces the uniqueness of each sensor
-    and provides necessary metadata (such as location and status) used in data analysis, mapping, and cross-referencing with measurement tables.
+### Description:
+The SENSORS table serves as the base registry for all physical air quality monitoring devices
+deployed by Saikawa Labs. Each row in this table corresponds to a unique sensor identified by
+its brand and serial number. This table is critical as it enforces the uniqueness of each sensor
+and provides necessary metadata (such as location and status) used in data analysis, mapping, and cross-referencing with measurement tables.
 
     ### Table Schema
 
