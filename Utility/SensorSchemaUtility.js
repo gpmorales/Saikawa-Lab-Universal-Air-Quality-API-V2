@@ -10,9 +10,7 @@ async function createSensorMeasurementTable(database, tableName, schema) {
 
         // Check for date/datetime columns
         const dateColumns = Object.entries(schema).filter(
-            ([_, dataType]) =>
-                dataType.toLowerCase() === "date" ||
-                    dataType.toLowerCase() === "datetime"
+            ([_, dataType]) => dataType.toLowerCase() === "date" || dataType.toLowerCase() === "datetime"
         );
 
         if (dateColumns.length !== 1) {
@@ -39,10 +37,12 @@ async function createSensorMeasurementTable(database, tableName, schema) {
                         table.integer(columnName);
                         break;
                     case "date":
-                        table.date(columnName).unique();
+                        table.date(columnName);
+                        table.unique([columnName], `uq_${columnName}`);
                         break;
                     case "datetime":
-                        table.datetime(columnName).unique();
+                        table.datetime(columnName);
+                        table.unique([columnName], `uq_${columnName}`);
                         break;
                     default:
                         table.text(columnName);
@@ -114,7 +114,7 @@ function formatDateTime(inputDate) {
         const minutes = date.getMinutes().toString().padStart(2, '0');
         const seconds = date.getSeconds().toString().padStart(2, '0');
 
-        // Return formatted datetime string
+        // Return formatted datetime string --> YYYY-MM-DD HH:MM:SS
         return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     } catch (error) {
         console.error(`Error formatting date: ${error.message}`);
