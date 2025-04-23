@@ -10,8 +10,6 @@ let singletonDatabase;
 
 async function RDSInstanceConnection() {
     try {
-        console.log("Attempting to connect to AWS RDS MySQL instance at host " + hostName + "\n");
-
         if (!singletonDatabase) {
             singletonDatabase = knex({
                 client: 'mysql2',
