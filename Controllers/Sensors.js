@@ -86,6 +86,8 @@ async function addNewSensor(request, response) {
             date_uploaded,
         });
 
+        await closeAWSConnection(RDSdatabase);
+
         // Respond with success
         return response.status(201).json({ message: "Sensor successfully added to the SENSORS table." });
 

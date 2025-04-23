@@ -20,6 +20,7 @@ async function RDSInstanceConnection() {
                 port: 3306,
                 timezone: "+00:00",
             },
+            pool: { min: 0, max: 5 }
         });
 
     } catch (err) {

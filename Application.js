@@ -70,7 +70,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Application entry point
 async function StartServer() {
     try {
-        //await initializeDatabase();
+        await initializeDatabase();
 
         app.listen(PORT, () => {
             console.log("\nListening to Port " + PORT + " ...\n");

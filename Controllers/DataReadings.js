@@ -340,7 +340,6 @@ async function fetchSensorDataReadings(request, response) {
 
                 // will change as we 
                 const rowsToAverage = rowsPerAveragedRow + (i < extraRows ? 1 : 0)
-                console.log(rowsToAverage);
 
                 if (currentIndex >= allData.length) break;
 
