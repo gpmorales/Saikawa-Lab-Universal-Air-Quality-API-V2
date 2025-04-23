@@ -1,4 +1,4 @@
-const { RDSInstanceConnection, closeAWSConnection } = require("../Database/RDSInstanceConnection");
+const { RDSInstanceConnection } = require("../Database/RDSInstanceConnection");
 const Joi = require("joi");
 
 
@@ -15,23 +15,15 @@ const sensorUploadSchema = Joi.object({
 
 // Get all Sensors and their information
 async function getAllSensors(request, response) {
-    let RDSdatabase;
-
     try {
-        RDSdatabase = await RDSInstanceConnection();
+        let RDSdatabase = await RDSInstanceConnection();
         const sensors = await RDSdatabase(SENSOR_TABLE).select("*")
-        await closeAWSConnection(RDSdatabase);
-
         return response.status(200).json({
             data: sensors,
             message: sensors.length ? "Successfully returned all registered Sensors.": "No Sensors have been registered at this moment."
         });
-
     } catch (err) {
         console.error('Error fetching sensors:', err);
-        if (RDSdatabase) {
-            await closeAWSConnection(RDSdatabase);
-        }
         return response.status(500).json({ error: `An error occurred while fetching sensors: ${err.sqlMessage}` });
     }
 }
@@ -39,12 +31,11 @@ async function getAllSensors(request, response) {
 
 // Add a sensor 
 async function addNewSensor(request, response) {
-    let RDSdatabase;
     let given_sensor_id;
     let given_sensor_brand;
 
     try {
-        RDSdatabase = await RDSInstanceConnection();
+        let RDSdatabase = await RDSInstanceConnection();
 
         const payload = {
             sensor_brand: request.params.sensor_brand,
@@ -86,15 +77,10 @@ async function addNewSensor(request, response) {
             date_uploaded,
         });
 
-        await closeAWSConnection(RDSdatabase);
-
         // Respond with success
         return response.status(201).json({ message: "Sensor successfully added to the SENSORS table." });
 
     } catch (err) {
-        if (RDSdatabase) {
-            await closeAWSConnection(RDSdatabase);
-        }
         console.error('Error adding sensor:', err);
         if (err.code === 'ER_DUP_ENTRY') {
             return response.status(400).json({ error: `Error: A sensor with ID '${given_sensor_id}' and brand '${given_sensor_brand}' already exists.`});
@@ -106,8 +92,6 @@ async function addNewSensor(request, response) {
 
 // Get a particular sensor's meta data and information
 async function getSensorInfo(request, response) {
-    let RDSdatabase;
-
     const { sensor_brand, sensor_id } = request.params;
 
     if (!sensor_brand || sensor_brand === "" || !sensor_id || sensor_id === "") {
@@ -115,14 +99,12 @@ async function getSensorInfo(request, response) {
     }
 
     try {
-        RDSdatabase = await RDSInstanceConnection();
+        let RDSdatabase = await RDSInstanceConnection();
 
         const sensor_info = await RDSdatabase(SENSOR_TABLE)
             .select("*")
             .where("sensor_brand", sensor_brand)
             .andWhere("sensor_id", sensor_id);
-
-        await closeAWSConnection(RDSdatabase);
 
         if (sensor_info.length === 0) {
             return response.status(200).json({ message: `Sensor with ID '${sensor_id}' of brand '${sensor_brand}', has not been registered!`});
@@ -132,13 +114,6 @@ async function getSensorInfo(request, response) {
 
     } catch (err) {
         console.error('Error fetching sensors:', err);
-        if (RDSdatabase) {
-            try {
-                await closeAWSConnection(RDSdatabase);
-            } catch (closeErr) {
-                console.error('Error closing database connection:', closeErr);
-            }
-        }
         return response.status(500).json({ error: `An error occurred while fetching this sensors data : ${err.sqlMessage}` });
     } 
 }
@@ -146,8 +121,6 @@ async function getSensorInfo(request, response) {
 
 // Update a sensors location 
 async function updateSensorLocation(request, response) {
-    let RDSdatabase;
-
     const { sensor_brand, sensor_id, } = request.params;
     const { new_latitude, new_longitude } = request.query;
 
@@ -171,7 +144,7 @@ async function updateSensorLocation(request, response) {
     }
 
     try {
-        RDSdatabase = await RDSInstanceConnection();
+        let RDSdatabase = await RDSInstanceConnection();
 
         // Check if the sensor exists
         const sensorExists = await RDSdatabase(SENSOR_TABLE)
@@ -179,7 +152,6 @@ async function updateSensorLocation(request, response) {
             .first();
 
         if (!sensorExists) {
-            await closeAWSConnection(RDSdatabase);
             return response.status(400).json({ error: 'Sensor not found.' });
         }
 
@@ -192,7 +164,6 @@ async function updateSensorLocation(request, response) {
                 last_location_update: RDSdatabase.fn.now()
             });
 
-        await closeAWSConnection(RDSdatabase);
 
         if (updatedRows === 0) {
             return response.status(500).json({ error: 'Failed to update sensor location.' });
@@ -212,9 +183,6 @@ async function updateSensorLocation(request, response) {
 
     } catch (err) {
         console.error('Error updating sensor location:', err);
-        if (RDSdatabase) {
-            await closeAWSConnection(RDSdatabase);
-        }
         return response.status(500).json({ error: `An error occurred while updating the sensor location: ${err.sqlMessage || err.message}`});
     }
 }
@@ -246,8 +214,6 @@ async function deprecateSensor(request, response) {
             .where({ sensor_brand, sensor_id })
             .update({ is_active: false });
 
-        await closeAWSConnection(RDSdatabase);
-
         if (updatedRows === 0) {
             return response.status(500).json({ error: 'Failed to update sensor status.' });
         }
@@ -256,9 +222,6 @@ async function deprecateSensor(request, response) {
 
     } catch (err) {
         console.error('Error deprecating sensor:', err);
-        if (RDSdatabase) {
-            await closeAWSConnection(RDSdatabase);
-        }
         return response.status(500).json({ error: `An error occurred while deprecating the sensor: ${err.sqlMessage || err.message}` });
     }
 }
@@ -266,7 +229,6 @@ async function deprecateSensor(request, response) {
 
 // Get all Sensors of the same brand and their information
 async function getSensorsByBrand(request, response) {
-    let RDSdatabase;
     const { sensor_brand } = request.params;
 
     if (!sensor_brand || sensor_brand === "") {
@@ -274,13 +236,11 @@ async function getSensorsByBrand(request, response) {
     }
 
     try {
-        RDSdatabase = await RDSInstanceConnection();
+        let RDSdatabase = await RDSInstanceConnection();
 
         const brand_sensors = await RDSdatabase(SENSOR_TABLE)
             .select("*")
             .where("sensor_brand", request.params.sensor_brand);
-
-        await closeAWSConnection(RDSdatabase);
 
         if (!brand_sensors || brand_sensors.length === 0) {
             return response.status(500).json({ 
@@ -292,13 +252,6 @@ async function getSensorsByBrand(request, response) {
 
     } catch (err) {
         console.error('Error fetching sensors:', err);
-        if (RDSdatabase) {
-            try {
-                await closeAWSConnection(RDSdatabase);
-            } catch (closeErr) {
-                console.error('Error closing database connection:', closeErr);
-            }
-        }
         return response.status(500).json({ error: `An error occurred while fetching sensors ${err.sqlMessage || err.message}` });
     }
 }

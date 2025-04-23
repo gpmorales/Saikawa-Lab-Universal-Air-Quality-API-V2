@@ -89,21 +89,21 @@ SensorModelRouter.route("").get(getAllSensorModels);
  *         required: false
  *         schema:
  *           type: string
- *         description: The name of the model applied to the measurements (this ONLY applies to CORRECTED data) 
+ *         description: The name of the model applied to the measurements (Use 'RAW_MODEL' for raw data) 
  *       - in: path
  *         name: measurement_type
  *         required: true
  *         schema:
  *           type: string
  *           enum: [RAW, CORRECTED]
- *         description: This measurements air quality metric type (RAW or CORRECTED)
+ *         description: This measurements air quality metric type
  *       - in: path
  *         name: measurement_time_interval
  *         required: true
  *         schema:
  *           type: string
  *           enum: [HOURLY, DAILY, OTHER]
- *         description: The measurements recorded time interval (HOURLY, DAILY, or OTHER if RAW data) 
+ *         description: The measurements recorded time interval (OTHER if raw data) 
  *     requestBody:
  *       required: true
  *       content:
@@ -267,21 +267,21 @@ SensorModelRouter.route("/:sensor_brand/:sensor_id").get(getSensorModels);
  *         required: false
  *         schema:
  *           type: string
- *         description: The name of the model applied to the measurements (this ONLY applies to CORRECTED data) 
+ *         description: The name of the model applied to the measurements (Use 'RAW_MODEL' for raw data) 
  *       - in: path
  *         name: measurement_type
  *         required: true
  *         schema:
  *           type: string
  *           enum: [RAW, CORRECTED]
- *         description: Type of measurement the sensor performs (e.g., RAW or CORRECTED).
+ *         description: Type of measurement the sensor performs
  *       - in: path
  *         name: measurement_time_interval
  *         required: true
  *         schema:
  *           type: string
  *           enum: [HOURLY, DAILY, OTHER]
- *         description: The measurements recorded time interval (HOURLY, DAILY, or OTHER if RAW data) 
+ *         description: The measurements recorded time interval (OTHER if raw data) 
  *     responses:
  *       200:
  *         description: Sensor data successfully retrieved and returned as CSV.
@@ -341,21 +341,21 @@ SensorModelRouter.route("/csv/:sensor_brand/:sensor_id/:measurement_type/:measur
  *         required: false
  *         schema:
  *           type: string
- *         description: The name of the model applied to the measurements (this ONLY applies to CORRECTED data) 
+ *         description: The name of the model applied to the measurements (Use 'RAW_MODEL' for raw data) 
  *       - in: path
  *         name: measurement_type
  *         required: true
  *         schema:
  *           type: string
  *           enum: [RAW, CORRECTED]
- *         description: This measurements air quality metric type (RAW or CORRECTED)
+ *         description: This measurements air quality metric type
  *       - in: path
  *         name: measurement_time_interval
  *         required: true
  *         schema:
  *           type: string
  *           enum: [HOURLY, DAILY, OTHER]
- *         description: The measurements recorded time interval (HOURLY, DAILY, or OTHER if RAW data) 
+ *         description: The measurements recorded time interval (OTHER if raw data) 
  *     responses:
  *       200:
  *         description: Sensor successfully added

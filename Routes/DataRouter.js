@@ -43,14 +43,14 @@ const {
  *         schema:
  *           type: string
  *           enum: [RAW, CORRECTED]
- *         description: This measurements air quality metric type (RAW or CORRECTED)
+ *         description: This measurements air quality metric type
  *       - in: path
  *         name: measurement_time_interval
  *         required: true
  *         schema:
  *           type: string
  *           enum: [HOURLY, DAILY, OTHER]
- *         description: The measurements recorded time interval (HOURLY, DAILY, or OTHER if RAW data) 
+ *         description: The measurements recorded time interval (OTHER if raw data) 
  *       - name: start_date
  *         in: query
  *         required: true
@@ -130,14 +130,14 @@ DataRouter.get("/csv/:sensor_brand/:sensor_id/:measurement_model/:measurement_ty
  *         schema:
  *           type: string
  *           enum: [RAW, CORRECTED]
- *         description: This measurements air quality metric type (RAW or CORRECTED)
+ *         description: This measurements air quality metric type
  *       - in: path
  *         name: measurement_time_interval
  *         required: true
  *         schema:
  *           type: string
  *           enum: [HOURLY, DAILY, OTHER]
- *         description: The measurements recorded time interval (HOURLY, DAILY, or OTHER if RAW data) 
+ *         description: The measurements recorded time interval (OTHER if raw data) 
  *       - name: start_date
  *         in: query
  *         required: true
@@ -224,14 +224,14 @@ DataRouter.get("/json/:sensor_brand/:sensor_id/:measurement_model/:measurement_t
  *         schema:
  *           type: string
  *           enum: [RAW, CORRECTED]
- *         description: This measurements air quality metric type (RAW or CORRECTED)
+ *         description: This measurements air quality metric type
  *       - in: path
  *         name: measurement_time_interval
  *         required: true
  *         schema:
  *           type: string
  *           enum: [HOURLY, DAILY, OTHER]
- *         description: The measurements recorded time interval (HOURLY, DAILY, or OTHER if RAW data) 
+ *         description: The measurements recorded time interval (OTHER if raw data) 
  *     requestBody:
  *       required: true
  *       content:
@@ -308,14 +308,14 @@ DataRouter.post("/json/:sensor_brand/:sensor_id/:measurement_model/:measurement_
  *         schema:
  *           type: string
  *           enum: [RAW, CORRECTED]
- *         description: This measurements air quality metric type (RAW or CORRECTED)
+ *         description: This measurements air quality metric type
  *       - in: path
  *         name: measurement_time_interval
  *         required: true
  *         schema:
  *           type: string
  *           enum: [HOURLY, DAILY, OTHER]
- *         description: The measurements recorded time interval (HOURLY, DAILY, or OTHER if RAW data) 
+ *         description: The measurements recorded time interval (OTHER if raw data) 
  *     requestBody:
  *       required: true
  *       content:
@@ -394,14 +394,14 @@ DataRouter.post("/csv/:sensor_brand/:sensor_id/:measurement_model/:measurement_t
 *         schema:
 *           type: string
 *           enum: [RAW, CORRECTED]
-*         description: This measurements air quality metric type (RAW or CORRECTED)
+*         description: This measurements air quality metric type
 *       - in: path
 *         name: measurement_time_interval
 *         required: true
 *         schema:
 *           type: string
 *           enum: [HOURLY, DAILY, OTHER]
-*         description: The measurements recorded time interval (HOURLY, DAILY, or OTHER if RAW data) 
+*         description: The measurements recorded time interval (OTHER if raw data) 
 *     responses:
 *       200:
 *         description: Successfully retrieved latest sensor reading

@@ -1,4 +1,4 @@
-const { RDSInstanceConnection, closeAWSConnection } = require("../Database/RDSInstanceConnection");
+const { RDSInstanceConnection } = require("../Database/RDSInstanceConnection");
 const { getDateColumn, formatDateTime, compareSets } = require("../Utility/SensorSchemaUtility.js");
 const { Parser } = require("json2csv");
 const { pipeline } = require("stream/promises");
@@ -12,8 +12,6 @@ const MEASUREMENT_TIME_INTERVALS = ["HOURLY", "DAILY", "OTHER"];
 
 // GET data via date queries (as CSV)
 async function exportSensorDataToCSV(request, response) {
-    let RDSdatabase;
-
     // Extract parameters from the request
     const {
         sensor_brand,
@@ -53,13 +51,12 @@ async function exportSensorDataToCSV(request, response) {
     }
 
     try {
-        RDSdatabase = await RDSInstanceConnection();
+        let RDSdatabase = await RDSInstanceConnection();
 
         const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
         const tableExists = await RDSdatabase.schema.hasTable(AQ_DATA_TABLE);
 
         if (!tableExists) {
-            await closeAWSConnection(RDSdatabase);
             return response.status(400).json({
                 error: `Table '${AQ_DATA_TABLE}' does not exist. Please ensure the parameters were correctly given.`
             });
@@ -69,7 +66,6 @@ async function exportSensorDataToCSV(request, response) {
         const dateColumn = await getDateColumn(RDSdatabase, AQ_DATA_TABLE);
 
         if (!dateColumn) {
-            await closeAWSConnection(RDSdatabase);
             return response.status(400).json({
                 error: `Table '${AQ_DATA_TABLE}' does not have any data OR is missing a Datetime column.`
             });
@@ -80,8 +76,6 @@ async function exportSensorDataToCSV(request, response) {
             .select("*")
             .where(dateColumn, ">=", start_date)
             .andWhere(dateColumn, "<=", end_date);
-
-        await closeAWSConnection(RDSdatabase);
 
         if (!sensor_data || sensor_data.length === 0) {
             return response
@@ -99,9 +93,6 @@ async function exportSensorDataToCSV(request, response) {
 
     } catch (err) {
         console.error("Error downloading sensor data: ", err);
-        if (RDSdatabase) {
-            await closeAWSConnection(RDSdatabase);
-        }
         return response.status(500).json({
             error: `Error processing your request: ${err.sqlMessage || err.message}`
         });
@@ -111,8 +102,6 @@ async function exportSensorDataToCSV(request, response) {
 
 // POST data via CSV file
 async function insertSensorDataFromCSV(request, response) {
-    let RDSdatabase;
-
     const {
         sensor_brand,
         sensor_id,
@@ -140,13 +129,12 @@ async function insertSensorDataFromCSV(request, response) {
     }
 
     try {
-        RDSdatabase = await RDSInstanceConnection();
+        let RDSdatabase = await RDSInstanceConnection();
 
         const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
         const tableExists = await RDSdatabase.schema.hasTable(AQ_DATA_TABLE);
 
         if (!tableExists) {
-            await closeAWSConnection(RDSdatabase);
             return response.status(400).json({
                 error: `Table '${AQ_DATA_TABLE}' does not exist. Please ensure the parameters were correctly given.`
             });
@@ -170,7 +158,6 @@ async function insertSensorDataFromCSV(request, response) {
         let dateColumn = await getDateColumn(RDSdatabase, AQ_DATA_TABLE);
 
         if (!dateColumn) {
-            await closeAWSConnection(RDSdatabase);
             return response.status(400).json({
                 error: `Table '${AQ_DATA_TABLE}' does not have any data OR is missing a datetime column.`
             });
@@ -213,7 +200,6 @@ async function insertSensorDataFromCSV(request, response) {
 
             if (sensorData.length === 0) {
                 console.error("No valid data found in the CSV.");
-                await closeAWSConnection(RDSdatabase);
                 return response
                     .status(400)
                     .json({ error: "No valid data found in the CSV file." });
@@ -227,8 +213,6 @@ async function insertSensorDataFromCSV(request, response) {
                 response
                     .status(500)
                     .json({ error: "Failed to insert data into the database." });
-            } finally {
-                await closeAWSConnection(RDSdatabase);
             }
         });
 
@@ -236,9 +220,6 @@ async function insertSensorDataFromCSV(request, response) {
 
     } catch (err) {
         console.error("Error processing sensor data:", err);
-        if (RDSdatabase) {
-            await closeAWSConnection(RDSdatabase);
-        }
         return response.status(500).json({ error: "Error processing your request." });
     }
 }
@@ -246,8 +227,6 @@ async function insertSensorDataFromCSV(request, response) {
 
 // GET data via date queries (as JSON)
 async function fetchSensorDataReadings(request, response) {
-    let RDSdatabase;
-
     // Extract parameters from the request
     const {
         sensor_brand,
@@ -286,13 +265,12 @@ async function fetchSensorDataReadings(request, response) {
     }
 
     try {
-        RDSdatabase = await RDSInstanceConnection();
+        let RDSdatabase = await RDSInstanceConnection();
 
         const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
         const tableExists = await RDSdatabase.schema.hasTable(AQ_DATA_TABLE);
 
         if (!tableExists) {
-            await closeAWSConnection(RDSdatabase);
             return response.status(400).json({
                 error: `Table '${AQ_DATA_TABLE}' does not exist. Please ensure the parameters were correctly given.`
             });
@@ -301,7 +279,6 @@ async function fetchSensorDataReadings(request, response) {
         const dateColumn = await getDateColumn(RDSdatabase, AQ_DATA_TABLE);
 
         if (!dateColumn) {
-            await closeAWSConnection(RDSdatabase);
             return response.status(400).json({
                 error: `Table '${AQ_DATA_TABLE}' does not have any data OR is missing a datetime column.`
             });
@@ -379,8 +356,6 @@ async function fetchSensorDataReadings(request, response) {
             }
         } 
 
-        await closeAWSConnection(RDSdatabase);
-
         // Return JSON data array
         if (averaged_rows) {
             return response.status(200).json(averagedData);
@@ -390,9 +365,6 @@ async function fetchSensorDataReadings(request, response) {
 
     } catch (err) {
         console.error("Error fetching sensor data: ", err);
-        if (RDSdatabase) {
-            await closeAWSConnection(RDSdatabase);
-        }
         return response.status(500).json({ error: "Error processing your request." });
     }
 }
@@ -400,8 +372,6 @@ async function fetchSensorDataReadings(request, response) {
 
 // POST data via JSON object
 async function insertSensorDataReadings(request, response) {
-    let RDSdatabase;
-
     // Extract parameters from the request
     const {
         sensor_brand,
@@ -433,13 +403,12 @@ async function insertSensorDataReadings(request, response) {
     }
 
     try {
-        RDSdatabase = await RDSInstanceConnection();
+        let RDSdatabase = await RDSInstanceConnection();
 
         const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "RAW-MODEL"}_${measurement_type}_${measurement_time_interval}`;
         const tableExists = await RDSdatabase.schema.hasTable(AQ_DATA_TABLE);
 
         if (!tableExists) {
-            await closeAWSConnection(RDSdatabase);
             return response.status(400).json({
                 error: `Table '${AQ_DATA_TABLE}' does not exist. Please ensure the parameters were correctly given.`
             });
@@ -488,7 +457,6 @@ async function insertSensorDataReadings(request, response) {
 
         // Insert data to Table
         const insertResult = await RDSdatabase(AQ_DATA_TABLE).insert(requestPayload);
-        await closeAWSConnection(RDSdatabase);
 
         if (insertResult > 0) {
             return response.status(201).json({
@@ -501,9 +469,6 @@ async function insertSensorDataReadings(request, response) {
         }
     } catch (err) {
         console.error("Error processing sensor data: ", err);
-        if (RDSdatabase) {
-            await closeAWSConnection(RDSdatabase);
-        }
         return response.status(500).json({ error: "Error processing your request." });
     }
 }
@@ -511,8 +476,6 @@ async function insertSensorDataReadings(request, response) {
 
 // GET last row of a table
 async function getLastDataReading(request, response) {
-    let RDSdatabase;
-
     // Extract parameters from the request
     const {
         sensor_brand,
@@ -541,13 +504,12 @@ async function getLastDataReading(request, response) {
     }
 
     try {
-        RDSdatabase = await RDSInstanceConnection();
+        let RDSdatabase = await RDSInstanceConnection();
 
         const AQ_DATA_TABLE = `${sensor_brand}_${sensor_id}_${measurement_model || "NIL-MODEL"}_${measurement_type}_${measurement_time_interval}`;
         const tableExists = await RDSdatabase.schema.hasTable(AQ_DATA_TABLE);
 
         if (!tableExists) {
-            await closeAWSConnection(RDSdatabase);
             return response.status(400).json({
                 error: `Table '${AQ_DATA_TABLE}' does not exist. Please ensure the parameters were correctly given.`
             });
@@ -557,7 +519,6 @@ async function getLastDataReading(request, response) {
         const dateColumn = await getDateColumn(RDSdatabase, AQ_DATA_TABLE);
 
         if (!dateColumn) {
-            await closeAWSConnection(RDSdatabase);
             return response.status(400).json({
                 error: `Table '${AQ_DATA_TABLE}' does not have any data OR is missing a datetime column.`
             });
@@ -575,14 +536,10 @@ async function getLastDataReading(request, response) {
                 .json({ error: "No data found for the specified sensor." });
         }
 
-        await closeAWSConnection(RDSdatabase);
         return response.status(200).json(last_row);
 
     } catch (err) {
         console.error("Error fetching last row of sensor data readings: ", err);
-        if (RDSdatabase) {
-            await closeAWSConnection(RDSdatabase);
-        }
         return response.status(500).json({ error: "Error processing your request." });
     }
 }

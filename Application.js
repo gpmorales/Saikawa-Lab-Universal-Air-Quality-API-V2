@@ -1,4 +1,4 @@
-const { RDSInstanceConnection, closeAWSConnection } = require("./Database/RDSInstanceConnection");
+const { RDSInstanceConnection } = require("./Database/RDSInstanceConnection");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 const express = require("express");
@@ -31,8 +31,8 @@ const options = {
     },
     servers: [
       {
-        //url: "http://localhost:3000", // For local instance
-        url: "https://api2-dot-saikawalab-427516.uc.r.appspot.com",
+        url: "http://localhost:3000", // For local instance
+        //url: "https://api2-dot-saikawalab-427516.uc.r.appspot.com",
         description: "Development Server",
       },
     ],
@@ -137,8 +137,6 @@ async function initializeDatabase() {
                 console.error("Error creating SENSOR_MODELS table:", err);
             });
     }
-
-    await closeAWSConnection(db);
 }
 
 
